@@ -7,11 +7,14 @@ cisco_config = CiscoConfig()
 def simplified_config(config):
     # Implement logika untuk menyederhanakan tampilan konfigurasi
     # Dalam contoh ini, kita akan menghapus baris-baris terkait SNMP
-    # dan hanya menyertakan konfigurasi dari interface yang tidak dimatikan
+    # dan hanya menyertakan konfigurasi dari interface yang tidak dimatikan,
+    # baris-baris IP route, baris-baris ACL, dan baris-baris NAT
 
     lines = config.split('\n')
     simplified_lines = []
     current_interface = None
+    in_acl = False
+    in_nat = False
 
     for line in lines:
         # Hilangkan baris-baris terkait SNMP
@@ -24,8 +27,15 @@ def simplified_config(config):
             elif current_interface and 'shutdown' in line.lower():
                 # Hapus baris interface yang dimatikan (shutdown)
                 current_interface = None
-            elif current_interface is not None:
-                # Tambahkan baris ke hasil akhir hanya jika sedang dalam interface yang tidak dimatikan
+            elif current_interface is not None or line.lower().startswith(('ip route', 'access-list', 'ip nat')):
+                # Tambahkan baris ke hasil akhir hanya jika sedang dalam interface yang tidak dimatikan,
+                # atau baris-baris IP route, ACL, atau NAT
+                simplified_lines.append(line)
+                # Tentukan jika kita sedang di dalam konfigurasi ACL atau NAT
+                in_acl = True if line.lower().startswith('access-list') else False
+                in_nat = True if line.lower().startswith('ip nat') else False
+            elif in_acl or in_nat:
+                # Terus tambahkan baris dalam ACL atau NAT ke hasil akhir
                 simplified_lines.append(line)
 
     return '\n'.join(simplified_lines)
