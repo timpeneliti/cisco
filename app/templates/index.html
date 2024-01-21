@@ -9,7 +9,7 @@
         {% for device, config in devices.items() %}
             <li>
                 <strong>{{ device }}</strong>:
-                <pre>{{ config|safe }}</pre>
+                <pre>{{ simplified_config(config)|safe }}</pre>
             </li>
         {% endfor %}
     </ul>

@@ -4,9 +4,23 @@ from cisco_config import CiscoConfig
 
 cisco_config = CiscoConfig()
 
+def simplified_config(config):
+    # Implement logika untuk menyederhanakan tampilan konfigurasi
+    # Dalam contoh ini, kita akan menghapus baris-baris terkait SNMP
+
+    lines = config.split('\n')
+    simplified_lines = []
+
+    for line in lines:
+        # Hilangkan baris-baris terkait SNMP
+        if 'snmp-server' not in line.lower():
+            simplified_lines.append(line)
+
+    return '\n'.join(simplified_lines)
+
 @app.route('/')
 def index():
-    return render_template('index.html', devices=cisco_config.configurations)
+    return render_template('index.html', devices=cisco_config.configurations, simplified_config=simplified_config)
 
 @app.route('/save_config', methods=['POST'])
 def save_config():
