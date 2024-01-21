@@ -7,14 +7,26 @@ cisco_config = CiscoConfig()
 def simplified_config(config):
     # Implement logika untuk menyederhanakan tampilan konfigurasi
     # Dalam contoh ini, kita akan menghapus baris-baris terkait SNMP
+    # dan hanya menyertakan konfigurasi dari interface yang tidak dimatikan
 
     lines = config.split('\n')
     simplified_lines = []
+    current_interface = None
 
     for line in lines:
         # Hilangkan baris-baris terkait SNMP
         if 'snmp-server' not in line.lower():
-            simplified_lines.append(line)
+            # Identifikasi interface yang sedang diproses
+            if line.lower().startswith('interface'):
+                current_interface = line.strip()
+                # Tambahkan baris interface ke hasil akhir
+                simplified_lines.append(current_interface)
+            elif current_interface and 'shutdown' in line.lower():
+                # Hapus baris interface yang dimatikan (shutdown)
+                current_interface = None
+            elif current_interface is not None:
+                # Tambahkan baris ke hasil akhir hanya jika sedang dalam interface yang tidak dimatikan
+                simplified_lines.append(line)
 
     return '\n'.join(simplified_lines)
 
