@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cisco Configurations</title>
+</head>
+<body>
+    <h1>Cisco Configurations</h1>
+    <ul>
+        {% for device, config in devices.items() %}
+            <li>
+                <strong>{{ device }}</strong>:
+                <pre>{{ config|safe }}</pre>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <form method="post" action="/save_config">
+        <label for="device_name">Device Name:</label>
+        <input type="text" name="device_name" required><br>
+
+        <label for="config">Configuration:</label>
+        <textarea name="config" required></textarea><br>
+
+        <button type="submit">Save Configuration</button>
+    </form>
+</body>
+</html>
