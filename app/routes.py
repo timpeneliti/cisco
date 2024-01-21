@@ -15,12 +15,17 @@ def simplified_config(config):
     current_interface = None
     in_acl = False
     in_nat = False
+    hostname_line_added = False  # Menandakan apakah baris hostname sudah ditambahkan
 
     for line in lines:
         # Hilangkan baris-baris terkait SNMP
         if 'snmp-server' not in line.lower():
+            # Identifikasi baris hostname dan tambahkan ke hasil akhir
+            if line.lower().startswith('hostname'):
+                simplified_lines.append(line)
+                hostname_line_added = True
             # Identifikasi interface yang sedang diproses
-            if line.lower().startswith('interface'):
+            elif line.lower().startswith('interface'):
                 current_interface = line.strip()
                 # Tambahkan baris interface ke hasil akhir
                 simplified_lines.append(current_interface)
@@ -30,13 +35,20 @@ def simplified_config(config):
             elif current_interface is not None or line.lower().startswith(('ip route', 'access-list', 'ip nat')):
                 # Tambahkan baris ke hasil akhir hanya jika sedang dalam interface yang tidak dimatikan,
                 # atau baris-baris IP route, ACL, atau NAT
+                if line.lower().startswith('ip nat') and not in_nat:
+                    # Jika ini adalah baris pertama dari konfigurasi NAT, tambahkan satu baris kosong
+                    simplified_lines.append('!\n')
+                    in_nat = True
                 simplified_lines.append(line)
                 # Tentukan jika kita sedang di dalam konfigurasi ACL atau NAT
                 in_acl = True if line.lower().startswith('access-list') else False
-                in_nat = True if line.lower().startswith('ip nat') else False
             elif in_acl or in_nat:
                 # Terus tambahkan baris dalam ACL atau NAT ke hasil akhir
                 simplified_lines.append(line)
+
+    # Jika baris hostname belum ditambahkan, tambahkan ke akhir
+    if not hostname_line_added:
+        simplified_lines.append('hostname <your_hostname_here>')  # Ganti dengan hostname yang sesuai
 
     return '\n'.join(simplified_lines)
 
