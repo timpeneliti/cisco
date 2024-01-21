@@ -6,11 +6,12 @@ cisco_config = CiscoConfig()
 
 def simplified_config(config):
     # Implement logika untuk menyederhanakan tampilan konfigurasi
-    # Dalam contoh ini, kita akan menghapus baris-baris terkait SNMP
-    # dan hanya menyertakan konfigurasi dari interface yang tidak dimatikan,
+    # Dalam contoh ini, kita akan menghapus baris-baris terkait SNMP,
+    # line vty, dan blok line con, aux, vty
+    # serta hanya menyertakan konfigurasi dari interface yang tidak dimatikan,
     # baris-baris IP route, baris-baris ACL, dan baris-baris NAT
 
-    lines = config.split('\n')
+    lines = iter(config.split('\n'))
     simplified_lines = []
     current_interface = None
     in_acl = False
@@ -18,8 +19,14 @@ def simplified_config(config):
     hostname_line_added = False  # Menandakan apakah baris hostname sudah ditambahkan
 
     for line in lines:
-        # Hilangkan baris-baris terkait SNMP
-        if 'snmp-server' not in line.lower():
+        # Hilangkan baris-baris terkait SNMP dan line vty
+        if 'snmp-server' not in line.lower() and 'line vty' not in line.lower():
+            # Hilangkan blok line con, aux, vty
+            if line.lower().startswith(('line con', 'line aux', 'line vty')):
+                while line.strip() != '!':
+                    line = next(lines)
+                continue
+
             # Identifikasi baris hostname dan tambahkan ke hasil akhir
             if line.lower().startswith('hostname'):
                 simplified_lines.append(line)
@@ -29,7 +36,10 @@ def simplified_config(config):
                 current_interface = line.strip()
                 # Tambahkan baris interface ke hasil akhir
                 simplified_lines.append(current_interface)
-            elif current_interface and 'shutdown' in line.lower():
+            elif current_interface is not None and 'no ip address' in line.lower() and 'shutdown' in line.lower():
+                # Tambahkan perintah no shutdown hanya jika interface memiliki no ip address dan shutdown
+                simplified_lines.append(' no shutdown')
+            elif current_interface is not None and 'shutdown' in line.lower():
                 # Hapus baris interface yang dimatikan (shutdown)
                 current_interface = None
             elif current_interface is not None or line.lower().startswith(('ip route', 'access-list', 'ip nat')):
